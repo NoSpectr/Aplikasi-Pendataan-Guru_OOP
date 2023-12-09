@@ -2,7 +2,7 @@
 
 <Form version="1.5" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JFrameFormInfo">
   <NonVisualComponents>
-    <Component class="javax.swing.JOptionPane" name="jOptionPane1">
+    <Component class="javax.swing.JOptionPane" name="PopUpError">
     </Component>
   </NonVisualComponents>
   <Properties>

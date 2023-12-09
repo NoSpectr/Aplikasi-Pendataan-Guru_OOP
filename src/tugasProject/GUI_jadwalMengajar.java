@@ -6,6 +6,7 @@ package tugasProject;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
 import tugasProject.jadwalMengajar;
@@ -41,7 +42,7 @@ public class GUI_jadwalMengajar extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jOptionPane1 = new javax.swing.JOptionPane();
+        PopUpError = new javax.swing.JOptionPane();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
@@ -234,38 +235,49 @@ public class GUI_jadwalMengajar extends javax.swing.JFrame {
 //
 //        memo.append(hasil); // Menambahkan hasil ke memo
 
-        // Membuat instance dari kelas jadwalMengajar
-        jadwalMengajar jadwal = new jadwalMengajar("", "", "Laki-Laki", "", "", "", 0, "", "", 0, "", "");
+        try {
+            // Membuat instance dari kelas jadwalMengajar
+            jadwalMengajar jadwal = new jadwalMengajar("", "", "Laki-Laki", "", "", "", 0, "", "", 0, "", "");
 
-        // Mengatur data jadwal menggunakan nilai dari komponen GUI
-        jadwal.setNama(txtNama.getText());
-        jadwal.setHari(cbHari.getSelectedItem().toString());
+            // Validasi untuk memastikan input nama pengajar hanya menerima string
+            String namaPengajar = txtNama.getText();
+            if (!namaPengajar.matches("[a-zA-Z]+")) {
+                throw new Exception("Nama pengajar harus berupa teks.");
+            }
 
-        // Membersihkan teks "Ke - " dari string dan mengonversi menjadi nilai integer
-        String jamString = cbJam.getSelectedItem().toString().replaceAll("\\D", "");
-        jadwal.setJam(Integer.parseInt(jamString));
+            // Mengatur data jadwal menggunakan nilai dari komponen GUI
+            jadwal.setNama(namaPengajar);
+            jadwal.setHari(cbHari.getSelectedItem().toString());
 
-        jadwal.setKelas(cbKelas.getSelectedItem().toString());
-        jadwal.setMataPelajaran(cbMapel.getSelectedItem().toString());
+            // Membersihkan teks "Ke - " dari string dan mengonversi menjadi nilai integer
+            String jamString = cbJam.getSelectedItem().toString().replaceAll("\\D", "");
+            jadwal.setJam(Integer.parseInt(jamString));
 
-        // Membuat ArrayList untuk menyimpan data objek jadwalMengajar
-        List<Object> list = new ArrayList<>();
-        list.add(jadwal.getNama());
-        list.add(jadwal.getHari());
-        list.add(jadwal.getJam());
-        list.add(jadwal.getKelas());
-        list.add(jadwal.getMataPelajaran());
+            jadwal.setKelas(cbKelas.getSelectedItem().toString());
+            jadwal.setMataPelajaran(cbMapel.getSelectedItem().toString());
 
-        // Menambahkan baris baru ke model tabel menggunakan data dari ArrayList 'list'
-        dataModel.addRow(list.toArray());
+            // Membuat ArrayList untuk menyimpan data objek jadwalMengajar
+            List<Object> list = new ArrayList<>();
+            list.add(jadwal.getNama());
+            list.add(jadwal.getHari());
+            list.add(jadwal.getJam());
+            list.add(jadwal.getKelas());
+            list.add(jadwal.getMataPelajaran());
 
-        // Memberi sinyal bahwa data pada model tabel telah berubah
-        dataModel.fireTableDataChanged();
+            // Menambahkan baris baru ke model tabel menggunakan data dari ArrayList 'list'
+            dataModel.addRow(list.toArray());
 
-        // Memanggil fungsi 'clear' untuk membersihkan nilai dari komponen
-        clear();
-        // Implementasi Interface
-        jadwal.displayJadwal();
+            // Memberi sinyal bahwa data pada model tabel telah berubah
+            dataModel.fireTableDataChanged();
+
+            // Memanggil fungsi 'clear' untuk membersihkan nilai dari komponen
+            clear();
+            // Implementasi Interface
+            jadwal.displayJadwal();
+        } catch (Exception ex) {
+            // Menampilkan pesan kesalahan jika terjadi exception pada input nama pengajar
+            PopUpError.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnSimpanActionPerformed
 
     private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapusActionPerformed
@@ -282,7 +294,7 @@ public class GUI_jadwalMengajar extends javax.swing.JFrame {
             dataModel.removeRow(selectedRow);
         } else {
             // Jika tidak ada baris yang dipilih, berikan pesan atau lakukan tindakan lain
-            jOptionPane1.showMessageDialog(this, "Pilih baris yang ingin dihapus.", "Peringatan", jOptionPane1.WARNING_MESSAGE);
+            PopUpError.showMessageDialog(this, "Pilih baris yang ingin dihapus.", "Peringatan", PopUpError.WARNING_MESSAGE);
         }
     }//GEN-LAST:event_btnHapusActionPerformed
 
@@ -352,6 +364,7 @@ public class GUI_jadwalMengajar extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JOptionPane PopUpError;
     private javax.swing.JButton btnBatal;
     private javax.swing.JButton btnClose;
     private javax.swing.JButton btnHapus;
@@ -366,7 +379,6 @@ public class GUI_jadwalMengajar extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
-    private javax.swing.JOptionPane jOptionPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable table_jadwalMengajar;
     private javax.swing.JTextField txtNama;
