@@ -4,11 +4,19 @@
  */
 package tugasProject;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
-import tugasProject.Guru;
 
 /**
  *
@@ -21,36 +29,191 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
      */
     public GUI_pendataanGuru() {
         initComponents();
-        // Membuat objek Guru dengan data awal atau konstructor
-        //        Guru data = new Guru("G5426", "Irfan", "Laki - laki", "Islam", "Sidoarjo", "085456123789", 5642314);
-        //
-        //        txtkodeGuru.setText(data.kodeGuru);
-        //        txtNuptk.setText(Integer.toString(data.nuptk));
-        //        txtNama.setText(data.nama);
-        //        if (data.jenisKelamin.equals("Laki - laki")) {
-        //            rdLaki.setSelected(true);
-        //            rdPerempuan.setSelected(false);
-        //        } else {
-        //            rdLaki.setSelected(false);
-        //            rdPerempuan.setSelected(true);
-        //        }
-        //        txtAgama.setText(data.agama);
-        //        txtAlamat.setText(data.alamat);
-        //        txtTelp.setText(data.noTelp);
-        //        // Menampilkan status mengajar guru
-        //        cbStatusMengajar.setSelected(true);
-        //
-        //        // Menonaktifkan elemen-elemen antarmuka pengguna agar tidak dapat diubah
-        //        txtkodeGuru.setEnabled(false);
-        //        txtNuptk.setEnabled(false);
-        //        txtNama.setEnabled(false);
-        //        rdLaki.setEnabled(false);
-        //        rdPerempuan.setEnabled(false);
-        //        txtAgama.setEnabled(false);
-        //        txtAlamat.setEnabled(false);
-        //        txtTelp.setEnabled(false);
-        //        cbStatusMengajar.setEnabled(false);
+        koneksi();
+        tampil();
+    }
+    //masukkan conection (public Connection conn;)
+    public Connection conn;
 
+    //masukkan method koneksi()
+    public void koneksi() {
+        try {
+            conn = null;
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost/projectoop23?user=root&password=");
+        } catch (ClassNotFoundException | SQLException e) {
+            Logger.getLogger(GUI_pendataanGuru.class.getName()).log(Level.SEVERE, null, e);
+            JOptionPane.showMessageDialog(null, "Terjadi Kesalahan Koneksi Database!");
+        }
+    }
+
+    //atribut
+    String nuptk1, kodeGuru1, nama1, jenisKelamin, agama1, alamat1, noTelp1, email1, statusMengajar1;
+
+    //untuk batal()
+    public void batal() {
+        txtNuptk.setText("");
+        txtkodeGuru.setText("");
+        txtNama.setText("");
+        txtAgama.setText("");
+        txtAlamat.setText("");
+        txtTelp.setText("");
+        txtEmail.setText("");
+        btnJk.clearSelection();
+        txtStatus.setText("");
+    }
+
+    // Method itempilih
+    public void itempilih() {
+        txtNuptk.setText(String.valueOf(nuptk1));
+        txtkodeGuru.setText(kodeGuru1);
+        txtNama.setText(nama1);
+        if (rdLaki.isSelected()) {
+            jenisKelamin = rdLaki.getText();
+        } else {
+            jenisKelamin = rdPerempuan.getText();
+        }
+        txtAgama.setText(agama1);
+        txtAlamat.setText(alamat1);
+        txtTelp.setText(noTelp1);
+        txtEmail.setText(email1);
+        txtStatus.setText(statusMengajar1);
+    }
+
+    //method delete
+    public void delete() {
+        int ok = JOptionPane.showConfirmDialog(null, "Apakah Anda yakin akan menghapus data?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+        if (ok == 0) {
+            try {
+                int row = table_dataGuru.getSelectedRow();
+                String kodeGuru = table_dataGuru.getValueAt(row, 1).toString(); // Ambil kode guru dari baris yang dipilih
+
+                // Query untuk menghapus data berdasarkan kode guru tertentu
+                String sql = "DELETE FROM tb_guru WHERE kodeGuru=?";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setString(1, kodeGuru);
+                stmt.executeUpdate();
+
+                JOptionPane.showMessageDialog(null, "Data Berhasil dihapus");
+                batal();
+                refresh();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null, "Data gagal dihapus");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    //method update
+    public void update() {
+        int nuptkLama = Integer.parseInt(nuptk1); // Variabel untuk menyimpan NUPTK sebelumnya
+        String kodeGuru = txtkodeGuru.getText();
+        String nama = txtNama.getText();
+        String jenisKelamin;
+        if (rdLaki.isSelected()) {
+            jenisKelamin = "Laki-Laki";
+        } else {
+            jenisKelamin = "Perempuan";
+        }
+        String agama = txtAgama.getText();
+        String alamat = txtAlamat.getText();
+        String noTelp = txtTelp.getText();
+        String email = txtEmail.getText();
+        String statusMengajar = txtStatus.getText();
+
+        try {
+            Statement statement = conn.createStatement();
+            String sql = "UPDATE tb_guru SET nuptk='" + nuptkLama + "', kodeGuru='" + kodeGuru + "', nama='" + nama + "', jenisKelamin='" + jenisKelamin + "', agama='" + agama + "', alamat='" + alamat + "', noTelp='" + noTelp + "', email='" + email + "', statusMengajar='" + statusMengajar + "' WHERE nuptk=" + nuptkLama;
+            // Persiapan dan eksekusi query UPDATE
+            java.sql.PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.executeUpdate();
+
+            JOptionPane.showMessageDialog(null, "Update Data Guru Berhasil!");
+            batal(); // Bersihkan nilai setelah update
+            refresh(); // Refresh tampilan tabel setelah update
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error : " + e);
+        }
+    }
+
+    // method refresh()
+    public void refresh() {
+        GUI_pendataanGuru newGUI = new GUI_pendataanGuru();
+        newGUI.setVisible(true);
+        newGUI.tampil(); // Memanggil method tampil() untuk memperbarui data di tabel
+        this.setVisible(false);
+    }
+
+    //method insert
+    public void insert() {
+        int nuptk = Integer.parseInt(txtNuptk.getText());
+        String kodeGuru = txtkodeGuru.getText();
+        String nama = txtNama.getText();
+        String jenisKelamin;
+        if (rdLaki.isSelected()) {
+            jenisKelamin = "L";
+        } else {
+            jenisKelamin = "P";
+        }
+        String agama = txtAgama.getText();
+        String alamat = txtAlamat.getText();
+        String noTelp = txtTelp.getText();
+        String email = txtEmail.getText();
+        String statusMengajar = txtStatus.getText();
+
+        try {
+            koneksi(); // Memastikan koneksi ke database
+            Statement statement = conn.createStatement();
+            statement.executeUpdate("INSERT INTO tb_guru (nuptk, kodeGuru, nama, jenisKelamin, agama, alamat, noTelp, email, statusMengajar) "
+                    + "VALUES ('" + nuptk + "','" + kodeGuru + "','" + nama + "','" + jenisKelamin + "','" + agama + "','" + alamat + "',"
+                    + "'" + noTelp + "','" + email + "','" + statusMengajar + "')");
+            statement.close();
+            JOptionPane.showMessageDialog(null, "Berhasil Memasukkan Data Guru!");
+
+            // Setelah operasi insert, panggil tampil() untuk memperbarui tampilan tabel
+            tampil();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Terjadi Kesalahan Input: " + e.getMessage());
+            e.printStackTrace(); // Tambahkan ini untuk menampilkan stack trace pada console untuk melacak masalah
+        }
+        batal();
+    }
+
+    //method tampil
+    public void tampil() {
+        DefaultTableModel tabelhead = new DefaultTableModel();
+        tabelhead.addColumn("NUPTK");
+        tabelhead.addColumn("Kode Guru");
+        tabelhead.addColumn("Nama");
+        tabelhead.addColumn("Jenis Kelamin");
+        tabelhead.addColumn("Agama");
+        tabelhead.addColumn("Alamat");
+        tabelhead.addColumn("No Telp");
+        tabelhead.addColumn("Email");
+        tabelhead.addColumn("Status Mengajar");
+        try {
+            koneksi();
+            String sql = "SELECT * FROM tb_guru"; // Mengambil data dari tabel guru
+            Statement stat = conn.createStatement();
+            ResultSet res = stat.executeQuery(sql);
+            while (res.next()) {
+                tabelhead.addRow(new Object[]{
+                    res.getInt("nuptk"),
+                    res.getString("kodeGuru"),
+                    res.getString("nama"),
+                    res.getString("jenisKelamin"),
+                    res.getString("agama"),
+                    res.getString("alamat"),
+                    res.getString("noTelp"),
+                    res.getString("email"),
+                    res.getString("statusMengajar")
+                });
+            }
+            table_dataGuru.setModel(tabelhead); // Mengatur model tabel dengan data yang telah diambil
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
+            e.printStackTrace(); // Tambahkan ini untuk melacak masalah ke konsol
+        }
     }
 
     /**
@@ -81,15 +244,17 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
         btnProses = new javax.swing.JButton();
         btnTutup = new javax.swing.JButton();
         jLabel8 = new javax.swing.JLabel();
-        cbStatusMengajar = new javax.swing.JCheckBox();
         jLabel9 = new javax.swing.JLabel();
         txtkodeGuru = new javax.swing.JTextField();
         btnHapus = new javax.swing.JButton();
         btnBatal = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        table_dataGuru = new javax.swing.JTable();
         jLabel10 = new javax.swing.JLabel();
         txtEmail = new javax.swing.JTextField();
+        btnFormMapel = new javax.swing.JButton();
+        btnUpdate = new javax.swing.JButton();
+        txtStatus = new javax.swing.JTextField();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        table_dataGuru = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -142,8 +307,6 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
 
         jLabel8.setText("Satus");
 
-        cbStatusMengajar.setText("Sedang Mengajar");
-
         jLabel9.setText("Kode Guru");
 
         txtkodeGuru.addActionListener(new java.awt.event.ActionListener() {
@@ -166,25 +329,44 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
             }
         });
 
+        jLabel10.setText("Email");
+
+        btnFormMapel.setText("Form Mata Pelajaran");
+        btnFormMapel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnFormMapelActionPerformed(evt);
+            }
+        });
+
+        btnUpdate.setText("Update");
+        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateActionPerformed(evt);
+            }
+        });
+
         table_dataGuru.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
             new String [] {
-                "NUPTK", "Kode Guru", "Nama", "Jenis Kelamin", "Agama", "Alamat", "No. Telp", "Email", "Status"
+                "NUPTK", "Kode Guru", "Nama", "Jenis Kelamin", "Agama", "Alamat", "No Telp", "Email", "Status"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
         });
-        jScrollPane1.setViewportView(table_dataGuru);
-
-        jLabel10.setText("Email");
+        table_dataGuru.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                table_dataGuruMouseClicked(evt);
+            }
+        });
+        jScrollPane2.setViewportView(table_dataGuru);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -195,59 +377,59 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(276, 276, 276)
-                        .addComponent(jLabel1)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel7)
-                                    .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jLabel4)
-                                    .addComponent(jLabel5)
-                                    .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(rdLaki, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(rdPerempuan, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(txtNama)
-                                    .addComponent(txtAgama)
-                                    .addComponent(txtTelp)
-                                    .addComponent(txtAlamat)
-                                    .addComponent(txtEmail, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel9)
-                                    .addComponent(jLabel2))
-                                .addGap(21, 21, 21)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(txtNuptk, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(txtkodeGuru, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addComponent(jLabel10)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(cbStatusMengajar)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 26, Short.MAX_VALUE)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 573, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(22, 22, 22))))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnProses)
-                .addGap(45, 45, 45)
-                .addComponent(btnHapus)
-                .addGap(41, 41, 41)
-                .addComponent(btnBatal)
-                .addGap(44, 44, 44)
-                .addComponent(btnTutup)
-                .addGap(106, 106, 106))
+                        .addComponent(jLabel1))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addComponent(btnFormMapel)
+                        .addGroup(layout.createSequentialGroup()
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jLabel9)
+                                        .addComponent(jLabel2))
+                                    .addGap(21, 21, 21)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(txtNuptk, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(txtkodeGuru, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jLabel7)
+                                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel4)
+                                        .addComponent(jLabel5)
+                                        .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(rdLaki, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(rdPerempuan, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(txtNama)
+                                        .addComponent(txtAgama)
+                                        .addComponent(txtTelp)
+                                        .addComponent(txtAlamat)
+                                        .addComponent(txtEmail, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
+                                        .addComponent(txtStatus)))
+                                .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.LEADING))
+                            .addGap(24, 24, 24)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                    .addComponent(btnProses)
+                                    .addGap(55, 55, 55)
+                                    .addComponent(btnUpdate)
+                                    .addGap(58, 58, 58)
+                                    .addComponent(btnHapus)
+                                    .addGap(49, 49, 49)
+                                    .addComponent(btnBatal)
+                                    .addGap(121, 121, 121)
+                                    .addComponent(btnTutup))
+                                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 707, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(34, 34, 34)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -271,7 +453,7 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel6)
                             .addComponent(txtAgama, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGap(16, 16, 16)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel4)
                             .addComponent(txtAlamat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -285,16 +467,19 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
                             .addComponent(txtEmail, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(cbStatusMengajar)
-                            .addComponent(jLabel8)))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addComponent(jLabel8)
+                            .addComponent(txtStatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnHapus)
                     .addComponent(btnBatal)
                     .addComponent(btnTutup)
-                    .addComponent(btnProses))
-                .addContainerGap(18, Short.MAX_VALUE))
+                    .addComponent(btnProses)
+                    .addComponent(btnUpdate))
+                .addGap(18, 18, 18)
+                .addComponent(btnFormMapel)
+                .addContainerGap(14, Short.MAX_VALUE))
         );
 
         pack();
@@ -302,96 +487,7 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
 
     private void btnProsesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnProsesActionPerformed
         // TODO add your handling code here:
-        // Mendapatkan data inputan
-//        String kodeGuru = txtkodeGuru.getText();
-//        String nuptk = txtNuptk.getText();
-//        String nama = txtNama.getText();
-//        String jenisKelamin = rdLaki.isSelected() ? "Laki - laki" : "Perempuan";
-//        String agama = txtAgama.getText();
-//        String alamat = txtAlamat.getText();
-//        String noTelp = txtTelp.getText();
-//
-//        // Mengecek status mengajar berdasarkan checkbox
-//        String statusMengajar = cbStatusMengajar.isSelected() ? "Sedang Mengajar" : "Tidak Mengajar";
-//
-        // Menyusun data inputan dan status mengajar menjadi string
-//        String data = "DATA GURU SEKOLAH\n";
-//        data += "================================\n";
-//        data += "NUPTK \t: " + nuptk + "\n";
-//        data += "Kode Guru \t: " + kodeGuru + "\n";
-//        data += "Nama \t: " + nama + "\n";
-//        data += "Jenis Kelamin \t: " + jenisKelamin + "\n";
-//        data += "Agama \t: " + agama + "\n";
-//        data += "Alamat \t: " + alamat + "\n";
-//        data += "No Telp \t: " + noTelp + "\n";
-//        data += "--------------------------------------------------------\n";
-//        data += "Status Mengajar: " + statusMengajar + "\n";
-//
-//        // Menampilkan data inputan ke memo
-//        memo.setText(data);
-
-        // Mengambil model data dari tabel
-        DefaultTableModel dataModel = (DefaultTableModel) table_dataGuru.getModel();
-
-        // Inisialisasi sebuah ArrayList bernama 'list'
-        List<Object> list = new ArrayList<>();
-
-        // Mengatur tabel untuk membuat kolom dari model secara otomatis 
-        table_dataGuru.setAutoCreateColumnsFromModel(true);
-
-        // Inisialisasi variabel jenisKelamin
-        String jenisKelamin = "";
-
-        // Membuat instance dari kelas Guru
-        Guru guru = new Guru("", "", "Laki-Laki", "", "", "", 0, "");
-
-        // Mengatur data kode guru menggunakan nilai dari komponen
-        guru.setKodeGuru(txtkodeGuru.getText());
-
-        // Mengatur data nama menggunakan nilai dari komponen
-        guru.setNama(txtNama.getText());
-
-        // Mengatur jenis kelamin sesuai dengan radio button yang dipilih
-        if (rdLaki.isSelected()) {
-            jenisKelamin = rdLaki.getText();
-        } else {
-            jenisKelamin = rdPerempuan.getText();
-        }
-        guru.setJenisKelamin(jenisKelamin);
-
-        // Mengatur data agama menggunakan nilai dari komponen
-        guru.setAgama(txtAgama.getText());
-
-        // Mengatur data alamat menggunakan nilai dari komponen
-        guru.setAlamat(txtAlamat.getText());
-
-        // Mengatur data nomor telepon menggunakan nilai dari komponen
-        guru.setNoTelp(txtTelp.getText());
-        
-        guru.setEmail(txtEmail.getText());
-
-        // Mengatur data NUPTK menggunakan nilai dari komponen
-        guru.setNuptk(Integer.parseInt(txtNuptk.getText()));
-
-        // Mengatur status mengajar menggunakan nilai dari checkbox
-        guru.setStatusMengajar(cbStatusMengajar.isSelected());
-
-        // Menambahkan data-data dari objek Guru ke dalam ArrayList 'list'
-        list.add(guru.getNuptk());
-        list.add(guru.getKodeGuru());
-        list.add(guru.getNama());
-        list.add(guru.getJenisKelamin());
-        list.add(guru.getAgama());
-        list.add(guru.getAlamat());
-        list.add(guru.getNoTelp());
-        list.add(guru.getEmail());
-        list.add(guru.isStatusMengajar());
-
-        // Menambahkan baris baru ke model tabel menggunakan data dari ArrayList 'list'
-        dataModel.addRow(list.toArray());
-
-        // Memanggil fungsi 'clear' untuk membersihkan nilai dari komponen
-        clear();
+        insert();
     }//GEN-LAST:event_btnProsesActionPerformed
 
     private void btnTutupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTutupActionPerformed
@@ -413,39 +509,57 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
 
     private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapusActionPerformed
         // TODO add your handling code here:
-        // Mengambil model data dari tabel
-        DefaultTableModel dataModel = (DefaultTableModel) table_dataGuru.getModel();
-
-        // Mendapatkan indeks baris yang dipilih
-        int selectedRow = table_dataGuru.getSelectedRow();
-
-        // Memastikan ada baris yang dipilih sebelum menghapus
-        if (selectedRow != -1) {
-            // Menghapus baris yang dipilih dari model tabel
-            dataModel.removeRow(selectedRow);
-        } else {
-            // Jika tidak ada baris yang dipilih, berikan pesan atau lakukan tindakan lain
-            jOptionPane1.showMessageDialog(this, "Pilih baris yang ingin dihapus.", "Peringatan", jOptionPane1.WARNING_MESSAGE);
-        }
+        delete();
     }//GEN-LAST:event_btnHapusActionPerformed
 
     private void btnBatalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBatalActionPerformed
         // TODO add your handling code here:
-        clear();
+        batal();
     }//GEN-LAST:event_btnBatalActionPerformed
 
-    //untuk membatalkan pengisian data
-    public void clear() {
-        txtNuptk.setText("");
-        txtkodeGuru.setText("");
-        txtNama.setText("");
-        txtAgama.setText("");
-        txtAlamat.setText("");
-        txtTelp.setText("");
-        txtEmail.setText("");
-        btnJk.clearSelection();
-        cbStatusMengajar.setSelected(false);
-    }
+    private void btnFormMapelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFormMapelActionPerformed
+        // TODO add your handling code here:
+        new GUI_mataPelajaran().setVisible(true);
+    }//GEN-LAST:event_btnFormMapelActionPerformed
+
+    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
+        // TODO add your handling code here:
+        update();
+    }//GEN-LAST:event_btnUpdateActionPerformed
+
+    private void table_dataGuruMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_table_dataGuruMouseClicked
+        // TODO add your handling code here:
+        int tabel = table_dataGuru.getSelectedRow();
+        nuptk1 = table_dataGuru.getValueAt(tabel, 0).toString();
+        kodeGuru1 = table_dataGuru.getValueAt(tabel, 1).toString();
+        nama1 = table_dataGuru.getValueAt(tabel, 2).toString();
+        String jenisKelaminFromTable = table_dataGuru.getValueAt(tabel, 3).toString();
+        agama1 = table_dataGuru.getValueAt(tabel, 4).toString();
+        alamat1 = table_dataGuru.getValueAt(tabel, 5).toString();
+        noTelp1 = table_dataGuru.getValueAt(tabel, 6).toString();
+        email1 = table_dataGuru.getValueAt(tabel, 7).toString();
+        String cbStatusMengajar = table_dataGuru.getValueAt(tabel, 8).toString();
+
+        // Konversi nilai dari tabel ke tipe yang sesuai, misalnya:
+        if (jenisKelaminFromTable.equals("Laki-Laki")) {
+            rdLaki.setSelected(true);
+            rdPerempuan.setSelected(false);
+        } else if (jenisKelaminFromTable.equals("Perempuan")) {
+            rdLaki.setSelected(false);
+            rdPerempuan.setSelected(true);
+        }
+
+        // Mengatur nilai pada field input dengan nilai yang dipilih dari tabel
+        txtNuptk.setText(nuptk1);
+        txtkodeGuru.setText(kodeGuru1);
+        txtNama.setText(nama1);
+        txtAgama.setText(agama1);
+        txtAlamat.setText(alamat1);
+        txtTelp.setText(noTelp1);
+        txtEmail.setText(email1);
+        txtStatus.setText(cbStatusMengajar);
+        itempilih();
+    }//GEN-LAST:event_table_dataGuruMouseClicked
 
     /**
      * @param args the command line arguments
@@ -485,11 +599,12 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBatal;
+    private javax.swing.JButton btnFormMapel;
     private javax.swing.JButton btnHapus;
     private javax.swing.ButtonGroup btnJk;
     private javax.swing.JButton btnProses;
     private javax.swing.JButton btnTutup;
-    private javax.swing.JCheckBox cbStatusMengajar;
+    private javax.swing.JButton btnUpdate;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;
@@ -501,7 +616,7 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JOptionPane jOptionPane1;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JRadioButton rdLaki;
     private javax.swing.JRadioButton rdPerempuan;
     private javax.swing.JTable table_dataGuru;
@@ -510,6 +625,7 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
     private javax.swing.JTextField txtEmail;
     private javax.swing.JTextField txtNama;
     private javax.swing.JTextField txtNuptk;
+    private javax.swing.JTextField txtStatus;
     private javax.swing.JTextField txtTelp;
     private javax.swing.JTextField txtkodeGuru;
     // End of variables declaration//GEN-END:variables
