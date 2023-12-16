@@ -15,8 +15,10 @@ import javax.swing.JOptionPane;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.RowFilter;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import tugasProject.GUI_mataPelajaran;
 
 /**
@@ -32,7 +34,6 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
         initComponents();
         koneksi(); // Panggil metode koneksi saat GUI dimulai
         tampil(); // Tampilkan data awal pada tabel saat GUI dimulai
-        tampil_guru();
     }
 
     //conection
@@ -51,67 +52,35 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
     }
 
     //attribut
-    String kodeGuru1, namaMapel1, kodeMapel1, kelas1;
+    String namaMapel1, kodeMapel1, kelas1;
 
     //method itempilih()
     public void itempilih() {
         int selectedRow = table_dataMataPelajaran.getSelectedRow();
 
         // Menyimpan data yang dipilih dari tabel pada variabel
-        kodeGuru1 = table_dataMataPelajaran.getValueAt(selectedRow, 0).toString();
-        namaMapel1 = table_dataMataPelajaran.getValueAt(selectedRow, 1).toString();
-        kodeMapel1 = table_dataMataPelajaran.getValueAt(selectedRow, 2).toString();
-        kelas1 = table_dataMataPelajaran.getValueAt(selectedRow, 3).toString();
+        namaMapel1 = table_dataMataPelajaran.getValueAt(selectedRow, 0).toString();
+        kodeMapel1 = table_dataMataPelajaran.getValueAt(selectedRow, 1).toString();
+        kelas1 = table_dataMataPelajaran.getValueAt(selectedRow, 2).toString();
 
         // Menampilkan data pada komponen-komponen GUI
-        cmkodeGuru.setSelectedItem(kodeGuru1);
         txtMapel.setText(namaMapel1);
         txtkodeMapel.setText(kodeMapel1);
-        txtkelasMapel.setText(kelas1);
-    }
-
-    //method tampil_guru()
-    public void tampil_guru() {
-        try {
-            // Pastikan koneksi terbentuk dengan benar
-            koneksi();
-
-            // Ambil data kode guru dari tabel guru di GUI Pendataan Guru
-            String sql = "SELECT kodeGuru FROM tb_guru ORDER BY kodeGuru ASC";
-            Statement stt = conn.createStatement();
-            ResultSet res = stt.executeQuery(sql);
-
-            // Bersihkan ComboBox sebelum menambahkan data baru
-            cmkodeGuru.removeAllItems();
-
-            // Tambahkan data kode guru ke dalam ComboBox
-            while (res.next()) {
-                String kodeGuru = res.getString("kodeGuru");
-                cmkodeGuru.addItem(kodeGuru);
-            }
-
-            res.close();
-            stt.close();
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, "Terjadi kesalahan: " + e.getMessage());
-            e.printStackTrace();
-        }
+        cbKelas.setSelectedItem(kelas1);
     }
 
     //method insert()
     public void insert() {
-        String kodeGuru = cmkodeGuru.getSelectedItem().toString();
         String namaMapel = txtMapel.getText();
         String kodeMapel = txtkodeMapel.getText();
-        String kelas = txtkelasMapel.getText();
+        String kelas = cbKelas.getSelectedItem().toString(); // Mengambil nilai dari ComboBox kelas
 
         try {
             koneksi();
-            PreparedStatement stmt = conn.prepareStatement("INSERT INTO tb_mapel (kodeGuru, namaMapel, kodeMapel, kelas) VALUES (?, ?, ?, ?)");
-            stmt.setString(1, kodeGuru);
-            stmt.setString(2, namaMapel);
-            stmt.setString(3, kodeMapel);
-            stmt.setString(4, kelas);
+            PreparedStatement stmt = conn.prepareStatement("INSERT INTO tb_mapel (namaMapel, kodeMapel, kelas) VALUES (?, ?, ?)");
+            stmt.setString(1, namaMapel);
+            stmt.setString(2, kodeMapel);
+            stmt.setString(3, kelas);
 
             int rowsAffected = stmt.executeUpdate();
 
@@ -134,21 +103,18 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
 
     //method update()
     public void update() {
-        String kodeGuru = cmkodeGuru.getSelectedItem().toString();
         String namaMapel = txtMapel.getText();
         String kodeMapel = txtkodeMapel.getText();
-        String kelas = txtkelasMapel.getText();
+        String kelas = cbKelas.getSelectedItem().toString();
 
         try {
             koneksi();
-            PreparedStatement stmt = conn.prepareStatement("UPDATE tb_mapel SET kodeGuru=?, namaMapel=?, kodeMapel=?, kelas=? WHERE kodeMapel=?");
-            stmt.setString(1, kodeGuru);
-            stmt.setString(2, namaMapel);
-            stmt.setString(3, kodeMapel);
-            stmt.setString(4, kelas);
-            stmt.setString(5, kodeMapel);
+            PreparedStatement stmt = conn.prepareStatement("UPDATE tb_mapel SET namaMapel=?, kodeMapel=?, kelas=? WHERE kodeMapel=?");
+            stmt.setString(1, namaMapel);
+            stmt.setString(2, kodeMapel);
+            stmt.setString(3, kelas);
+            stmt.setString(4, kodeMapel1); // Menggunakan kodeMapel1 (kodeMapel sebelumnya) sebagai kriteria WHERE
             stmt.executeUpdate();
-
             JOptionPane.showMessageDialog(null, "Data berhasil diupdate");
             batal();
             tampil();
@@ -188,18 +154,17 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
     //method tampil()
     public void tampil() {
         DefaultTableModel tabelhead = new DefaultTableModel();
-        tabelhead.addColumn("Kode Guru");
         tabelhead.addColumn("Nama Mapel");
         tabelhead.addColumn("Kode Mapel");
         tabelhead.addColumn("Kelas");
 
         try {
             koneksi();
-            Statement stat = conn.createStatement();
-            ResultSet res = stat.executeQuery("SELECT * FROM tb_mapel");
+            String sql = "SELECT * FROM tb_mapel";
+            PreparedStatement stat = conn.prepareStatement(sql);
+            ResultSet res = stat.executeQuery();
             while (res.next()) {
                 tabelhead.addRow(new Object[]{
-                    res.getString("kodeGuru"),
                     res.getString("namaMapel"),
                     res.getString("kodeMapel"),
                     res.getString("kelas")
@@ -222,12 +187,28 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
 
     //method batal()
     public void batal() {
-        cmkodeGuru.setSelectedIndex(0);
         txtMapel.setText("");
         txtkodeMapel.setText("");
-        txtkelasMapel.setText("");
+        cbKelas.setSelectedIndex(0);
     }
 
+    //method cari();
+        public void cari() {
+        try {
+            String searchText = txtCari.getText();
+            DefaultTableModel model = (DefaultTableModel) table_dataMataPelajaran.getModel();
+            TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+            table_dataMataPelajaran.setRowSorter(sorter);
+
+            if (searchText.trim().length() == 0) {
+                sorter.setRowFilter(null);
+            } else {
+                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText)); // Menggunakan filter regex case-insensitive
+            }
+        } catch (Exception ex) {
+            System.out.println("Error: " + ex);
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -243,7 +224,6 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         txtMapel = new javax.swing.JTextField();
-        txtkelasMapel = new javax.swing.JTextField();
         txtkodeMapel = new javax.swing.JTextField();
         btnSimpan = new javax.swing.JButton();
         btnHapus = new javax.swing.JButton();
@@ -251,10 +231,11 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
         btnTutup = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         table_dataMataPelajaran = new javax.swing.JTable();
-        jButton1 = new javax.swing.JButton();
-        btnkodeGuru = new javax.swing.JButton();
-        cmkodeGuru = new javax.swing.JComboBox<>();
+        btnForm = new javax.swing.JButton();
         btnUpdate = new javax.swing.JButton();
+        cbKelas = new javax.swing.JComboBox<>();
+        btnCari = new javax.swing.JButton();
+        txtCari = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -270,6 +251,12 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
         txtMapel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txtMapelActionPerformed(evt);
+            }
+        });
+
+        txtkodeMapel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtkodeMapelActionPerformed(evt);
             }
         });
 
@@ -306,7 +293,7 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
 
             },
             new String [] {
-                "Kode Guru", "Nama Mapel", "Kode Mapel", "Kelas"
+                "Nama Mapel", "Kode Mapel", "Kelas"
             }
         ));
         table_dataMataPelajaran.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -316,24 +303,10 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
         });
         jScrollPane1.setViewportView(table_dataMataPelajaran);
 
-        jButton1.setText("Form Jadwal Mengajar");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        btnForm.setText("Form Jadwal Mengajar");
+        btnForm.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
-
-        btnkodeGuru.setText("Kode Guru");
-        btnkodeGuru.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnkodeGuruActionPerformed(evt);
-            }
-        });
-
-        cmkodeGuru.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "~Kode Guru~" }));
-        cmkodeGuru.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cmkodeGuruActionPerformed(evt);
+                btnFormActionPerformed(evt);
             }
         });
 
@@ -344,62 +317,71 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
             }
         });
 
+        cbKelas.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "10", "11", "12" }));
+
+        btnCari.setText("Cari Mapel 🔍");
+        btnCari.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCariActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jButton1))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                            .addGap(300, 300, 300)
-                            .addComponent(jLabel1))
-                        .addGroup(layout.createSequentialGroup()
-                            .addGap(32, 32, 32)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGroup(layout.createSequentialGroup()
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addComponent(jLabel3)
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.TRAILING)
-                                            .addComponent(btnkodeGuru)))
-                                    .addGap(18, 18, 18)
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                        .addComponent(txtMapel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
-                                        .addComponent(txtkelasMapel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
-                                        .addComponent(txtkodeMapel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
-                                        .addComponent(cmkodeGuru, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                            .addGap(18, 18, 18)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(btnSimpan)
-                                    .addGap(26, 26, 26)
-                                    .addComponent(btnHapus)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(btnUpdate)
-                                    .addGap(18, 18, 18)
-                                    .addComponent(btnBatal)
-                                    .addGap(36, 36, 36)
-                                    .addComponent(btnTutup))
-                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addContainerGap(14, Short.MAX_VALUE))
+                        .addGap(24, 24, 24)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addGap(300, 300, 300)
+                                .addComponent(txtCari, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnCari))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel3)
+                                    .addComponent(jLabel2)
+                                    .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                    .addComponent(txtMapel, javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(txtkodeMapel)
+                                    .addComponent(cbKelas, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addComponent(btnForm)
+                                        .addGroup(layout.createSequentialGroup()
+                                            .addComponent(btnSimpan)
+                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                            .addComponent(btnHapus)
+                                            .addGap(18, 18, 18)
+                                            .addComponent(btnUpdate)
+                                            .addGap(18, 18, 18)
+                                            .addComponent(btnBatal)
+                                            .addGap(44, 44, 44)
+                                            .addComponent(btnTutup)))
+                                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(276, 276, 276)
+                        .addComponent(jLabel1)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(14, 14, 14)
+                .addContainerGap(22, Short.MAX_VALUE)
                 .addComponent(jLabel1)
-                .addGap(26, 26, 26)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnCari)
+                    .addComponent(txtCari, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(btnkodeGuru)
-                            .addComponent(cmkodeGuru, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(txtMapel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel2))
@@ -409,9 +391,9 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
                             .addComponent(jLabel3))
                         .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(txtkelasMapel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel4)))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                            .addComponent(jLabel4)
+                            .addComponent(cbKelas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnSimpan)
@@ -420,8 +402,8 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
                     .addComponent(btnTutup)
                     .addComponent(btnUpdate))
                 .addGap(18, 18, 18)
-                .addComponent(jButton1)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(btnForm)
+                .addContainerGap())
         );
 
         pack();
@@ -452,41 +434,29 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
         dispose();
     }//GEN-LAST:event_btnTutupActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void btnFormActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFormActionPerformed
         // TODO add your handling code here:
         new GUI_jadwalMengajar().setVisible(true);
-    }//GEN-LAST:event_jButton1ActionPerformed
-
-    private void cmkodeGuruActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmkodeGuruActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cmkodeGuruActionPerformed
-
-    private void btnkodeGuruActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnkodeGuruActionPerformed
-        // TODO add your handling code here:
-        new GUI_pendataanGuru().setVisible(true);
-    }//GEN-LAST:event_btnkodeGuruActionPerformed
+    }//GEN-LAST:event_btnFormActionPerformed
 
     private void table_dataMataPelajaranMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_table_dataMataPelajaranMouseClicked
         // TODO add your handling code here:
-        int selectedRow = table_dataMataPelajaran.getSelectedRow();
-        if (selectedRow >= 0) {
-            kodeGuru1 = table_dataMataPelajaran.getValueAt(selectedRow, 0).toString(); // Ambil kode guru dari tabel Guru
-            namaMapel1 = table_dataMataPelajaran.getValueAt(selectedRow, 1).toString(); // Ambil nama mapel dari tabel Guru
-            kodeMapel1 = table_dataMataPelajaran.getValueAt(selectedRow, 2).toString(); // Ambil kode mapel dari tabel Guru
-            kelas1 = table_dataMataPelajaran.getValueAt(selectedRow, 3).toString(); // Ambil kelas dari tabel Guru
-
-            // Atur nilai yang diambil ke komponen GUI Mata Pelajaran
-            cmkodeGuru.setSelectedItem(kodeGuru1);
-            txtMapel.setText(namaMapel1);
-            txtkodeMapel.setText(kodeMapel1);
-            txtkelasMapel.setText(kelas1);
-        }
+        itempilih();
     }//GEN-LAST:event_table_dataMataPelajaranMouseClicked
 
     private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
         // TODO add your handling code here:
         update();
     }//GEN-LAST:event_btnUpdateActionPerformed
+
+    private void txtkodeMapelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtkodeMapelActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtkodeMapelActionPerformed
+
+    private void btnCariActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCariActionPerformed
+        // TODO add your handling code here:
+        cari();
+    }//GEN-LAST:event_btnCariActionPerformed
 
     /**
      * @param args the command line arguments
@@ -525,13 +495,13 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBatal;
+    private javax.swing.JButton btnCari;
+    private javax.swing.JButton btnForm;
     private javax.swing.JButton btnHapus;
     private javax.swing.JButton btnSimpan;
     private javax.swing.JButton btnTutup;
     private javax.swing.JButton btnUpdate;
-    private javax.swing.JButton btnkodeGuru;
-    private javax.swing.JComboBox<String> cmkodeGuru;
-    private javax.swing.JButton jButton1;
+    private javax.swing.JComboBox<String> cbKelas;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -539,8 +509,8 @@ public class GUI_mataPelajaran extends javax.swing.JFrame {
     private javax.swing.JOptionPane jOptionPane1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable table_dataMataPelajaran;
+    private javax.swing.JTextField txtCari;
     private javax.swing.JTextField txtMapel;
-    private javax.swing.JTextField txtkelasMapel;
     private javax.swing.JTextField txtkodeMapel;
     // End of variables declaration//GEN-END:variables
 }
