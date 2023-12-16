@@ -15,8 +15,10 @@ import javax.swing.JOptionPane;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.RowFilter;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 
 /**
  *
@@ -60,7 +62,7 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
         txtTelp.setText("");
         txtEmail.setText("");
         btnJk.clearSelection();
-        txtStatus.setText("");
+        cbStatus.setSelectedIndex(0);
     }
 
     // Method itempilih
@@ -77,7 +79,7 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
         txtAlamat.setText(alamat1);
         txtTelp.setText(noTelp1);
         txtEmail.setText(email1);
-        txtStatus.setText(statusMengajar1);
+        cbStatus.setSelectedItem(statusMengajar1);
     }
 
     //method delete
@@ -106,7 +108,7 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
 
     //method update
     public void update() {
-        int nuptkLama = Integer.parseInt(nuptk1); // Variabel untuk menyimpan NUPTK sebelumnya
+        int nuptkLama = Integer.parseInt(nuptk1);
         String kodeGuru = txtkodeGuru.getText();
         String nama = txtNama.getText();
         String jenisKelamin;
@@ -119,7 +121,7 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
         String alamat = txtAlamat.getText();
         String noTelp = txtTelp.getText();
         String email = txtEmail.getText();
-        String statusMengajar = txtStatus.getText();
+        String statusMengajar = cbStatus.getSelectedItem().toString(); // Mengambil nilai dari ComboBox
 
         try {
             Statement statement = conn.createStatement();
@@ -151,15 +153,15 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
         String nama = txtNama.getText();
         String jenisKelamin;
         if (rdLaki.isSelected()) {
-            jenisKelamin = "L";
+            jenisKelamin = "Laki-Laki";
         } else {
-            jenisKelamin = "P";
+            jenisKelamin = "Perempuan";
         }
         String agama = txtAgama.getText();
         String alamat = txtAlamat.getText();
         String noTelp = txtTelp.getText();
         String email = txtEmail.getText();
-        String statusMengajar = txtStatus.getText();
+        String statusMengajar = cbStatus.getSelectedItem().toString(); // Mengambil nilai dari ComboBox
 
         try {
             koneksi(); // Memastikan koneksi ke database
@@ -215,7 +217,24 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
             e.printStackTrace(); // Tambahkan ini untuk melacak masalah ke konsol
         }
     }
+    
+    //method cari();
+        public void cari() {
+        try {
+            String searchText = txtCari.getText();
+            DefaultTableModel model = (DefaultTableModel) table_dataGuru.getModel();
+            TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+            table_dataGuru.setRowSorter(sorter);
 
+            if (searchText.trim().length() == 0) {
+                sorter.setRowFilter(null);
+            } else {
+                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText)); // Menggunakan filter regex case-insensitive
+            }
+        } catch (Exception ex) {
+            System.out.println("Error: " + ex);
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -252,9 +271,11 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
         txtEmail = new javax.swing.JTextField();
         btnFormMapel = new javax.swing.JButton();
         btnUpdate = new javax.swing.JButton();
-        txtStatus = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
         table_dataGuru = new javax.swing.JTable();
+        cbStatus = new javax.swing.JComboBox<>();
+        btnCari = new javax.swing.JButton();
+        txtCari = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -368,6 +389,15 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
         });
         jScrollPane2.setViewportView(table_dataGuru);
 
+        cbStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Aktif", "Tidak Aktif" }));
+
+        btnCari.setText("Cari Nama 🔍");
+        btnCari.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCariActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -407,7 +437,7 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
                                         .addComponent(txtTelp)
                                         .addComponent(txtAlamat)
                                         .addComponent(txtEmail, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
-                                        .addComponent(txtStatus)))
+                                        .addComponent(cbStatus, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                                 .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.LEADING))
                             .addGap(24, 24, 24)
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -423,13 +453,23 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
                                     .addComponent(btnTutup))
                                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 707, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(txtCari, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnCari)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel1)
-                .addGap(34, 34, 34)
+                .addGap(5, 5, 5)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnCari)
+                    .addComponent(txtCari, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -468,7 +508,7 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel8)
-                            .addComponent(txtStatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(cbStatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -538,7 +578,7 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
         alamat1 = table_dataGuru.getValueAt(tabel, 5).toString();
         noTelp1 = table_dataGuru.getValueAt(tabel, 6).toString();
         email1 = table_dataGuru.getValueAt(tabel, 7).toString();
-        String cbStatusMengajar = table_dataGuru.getValueAt(tabel, 8).toString();
+        statusMengajar1 = table_dataGuru.getValueAt(tabel, 8).toString();
 
         // Konversi nilai dari tabel ke tipe yang sesuai, misalnya:
         if (jenisKelaminFromTable.equals("Laki-Laki")) {
@@ -557,9 +597,14 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
         txtAlamat.setText(alamat1);
         txtTelp.setText(noTelp1);
         txtEmail.setText(email1);
-        txtStatus.setText(cbStatusMengajar);
+        cbStatus.setSelectedItem(statusMengajar1);
         itempilih();
     }//GEN-LAST:event_table_dataGuruMouseClicked
+
+    private void btnCariActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCariActionPerformed
+        // TODO add your handling code here:
+        cari();
+    }//GEN-LAST:event_btnCariActionPerformed
 
     /**
      * @param args the command line arguments
@@ -599,12 +644,14 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBatal;
+    private javax.swing.JButton btnCari;
     private javax.swing.JButton btnFormMapel;
     private javax.swing.JButton btnHapus;
     private javax.swing.ButtonGroup btnJk;
     private javax.swing.JButton btnProses;
     private javax.swing.JButton btnTutup;
     private javax.swing.JButton btnUpdate;
+    private javax.swing.JComboBox<String> cbStatus;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;
@@ -622,10 +669,10 @@ public class GUI_pendataanGuru extends javax.swing.JFrame {
     private javax.swing.JTable table_dataGuru;
     private javax.swing.JTextField txtAgama;
     private javax.swing.JTextField txtAlamat;
+    private javax.swing.JTextField txtCari;
     private javax.swing.JTextField txtEmail;
     private javax.swing.JTextField txtNama;
     private javax.swing.JTextField txtNuptk;
-    private javax.swing.JTextField txtStatus;
     private javax.swing.JTextField txtTelp;
     private javax.swing.JTextField txtkodeGuru;
     // End of variables declaration//GEN-END:variables
