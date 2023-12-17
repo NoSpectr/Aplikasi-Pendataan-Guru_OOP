@@ -1,7 +1,7 @@
 # Aplikasi Pendataan Guru OOP
 
 ![forthebadge](https://forthebadge.com/images/badges/made-with-java.svg) [![forthebadge](https://forthebadge.com/images/badges/built-with-love.svg)](https://forthebadge.com)
-
+ 
 ![Maintainer](https://img.shields.io/badge/maintainer-NoSpectr-blue)
 
 >Aplikasi ini adalah aplikasi GUI yang dikembangkan untuk sistem sekolah meliputi tiga GUI utama. Pertama, GUI pendataan guru memungkinkan pengguna untuk memasukkan, memperbarui, dan menghapus data pada guru, termasuk informasi personal serta detail terkait pekerjaan. Kedua, GUI mata pelajaran memfasilitasi input dan manajemen data terkait mata pelajaran yang diajarkan. Terakhir, GUI jadwal mengajar berfungsi sebagai antarmuka untuk membuat jadwal mengajar, memanfaatkan informasi dari GUI mata pelajaran yang terintegrasi dari mata pelajaran yang telah didaftarkan sebelumnya.
