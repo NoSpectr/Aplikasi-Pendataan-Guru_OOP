@@ -22,4 +22,4 @@ Aplikasi ini dibangun dengan menggunakan:
 - [Laragon 6.0 or later](https://laragon.org/download/index.html)
 - [MYSQL 8.0.30 or later](https://www.google.com/intl/id/chrome/)
 ## Database
-- [Database MYSQL Apliaksi Pendataan Guru](https://drive.google.com/file/d/1yCgKh_YF8t9LlGm2JNS9onzJ_OTv_FL_/view?usp=sharing)
+- [Database MYSQL Aplikasi Pendataan Guru](https://drive.google.com/file/d/1yCgKh_YF8t9LlGm2JNS9onzJ_OTv_FL_/view?usp=sharing)
