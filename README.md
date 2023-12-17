@@ -20,6 +20,6 @@ Aplikasi ini dibangun dengan menggunakan:
 ## Requirements
 - [Apache NetBeans IDE 19 or later.](https://netbeans.apache.org/front/main/download/nb20/)
 - [Laragon 6.0 or later](https://laragon.org/download/index.html)
-- [MYSQL 8.0.30 or later](https://www.google.com/intl/id/chrome/)
+- [MYSQL 8.0.30 or later](https://downloads.mysql.com/archives/installer/)
 ## Database
 - [Database MYSQL Aplikasi Pendataan Guru](https://drive.google.com/file/d/1yCgKh_YF8t9LlGm2JNS9onzJ_OTv_FL_/view?usp=sharing)
